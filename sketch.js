@@ -42,7 +42,7 @@ let sonidoActivado = true;
 let estadoJuego = "inicio"; // "inicio", "jugando", "fin"
 
 // ====== VIDAS ======
-let vidas = 3; // 💖 Número de vidas
+let vidas = 3;
 
 // ====== SONIDOS ======
 let sonidoVuelo, sonidoChoque, musicaFondo;
@@ -69,10 +69,14 @@ function preload() {
 
 // ====== SETUP ======
 function setup() {
-  createCanvas(800, 500);
+  createCanvas(windowWidth, windowHeight); // se ajusta a toda la pantalla
 
   xFondo1 = 0;
   xFondo2 = width;
+
+  // Configurar música de fondo
+  musicaFondo.setLoop(true);
+  musicaFondo.setVolume(0.5); // volumen medio
 
   // Botones
   botonY = height - 100;
@@ -115,7 +119,6 @@ function pantallaInicio() {
   textSize(18);
   text("Presiona ESPACIO para volar", width / 2, height - 120);
   text("Letra P: Pausa  |  Letra R: Reinicia", width / 2, height - 90);
-
   textSize(22);
   text("Récord actual: " + highScore, width / 2, height - 40);
 }
@@ -126,12 +129,10 @@ function pantallaJuego() {
   image(fondo, xFondo1, 0, width, height);
   image(fondo, xFondo2, 0, width, height);
 
-  // Mostrar árboles
   for (let i = 0; i < numArboles; i++) {
     image(arbol, xArbol[i], yArbol[i], 100, alturaArbol[i]);
   }
 
-  // Mostrar garza cayendo
   if (mostrandoCaida) {
     image(garzaCae, xGarza, yGarza, 100, 80);
     yGarza += 8;
@@ -143,22 +144,23 @@ function pantallaJuego() {
     return;
   }
 
-  // ====== PAUSA MEJORADA ======
   if (pausa) {
     image(garza[frameActual], xGarza, yGarza, 100, 80);
     mostrarPuntaje();
-    fill(0, 120); // transparencia
+    fill(0, 120);
     rect(0, 0, width, height);
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(40);
-    text("⏸ PAUSA", width / 2, height / 2 - 20);
+    text("PAUSA", width / 2, height / 2 - 20);
     textSize(20);
     text("Presiona 'P' para continuar", width / 2, height / 2 + 30);
-    return; // se detiene TODO el movimiento
+    if (musicaFondo.isPlaying()) musicaFondo.pause();
+    return;
+  } else if (!musicaFondo.isPlaying() && sonidoActivado) {
+    musicaFondo.loop();
   }
 
-  // ====== LÓGICA DE JUEGO ======
   if (juegoActivo) {
     tiempoFrame++;
     if (tiempoFrame > 10) {
@@ -170,18 +172,15 @@ function pantallaJuego() {
     velocidad += gravedad;
     yGarza += velocidad;
 
-    // Movimiento de árboles
     for (let i = 0; i < numArboles; i++) {
       xArbol[i] -= velocidadArbol;
 
-      // Puntaje
       if (!puntoSumado[i] && xGarza > xArbol[i] + 100) {
         puntaje++;
         puntoSumado[i] = true;
         aumentarDificultad();
       }
 
-      // Reposicionar árbol
       if (xArbol[i] < -100) {
         xArbol[i] = width + random(distanciaMinArbol, distanciaMinArbol + 200);
         alturaArbol[i] = random(alturaMin, alturaMax);
@@ -192,7 +191,6 @@ function pantallaJuego() {
 
     mostrarPuntaje();
 
-    // Colisiones
     if (colisiona() || yGarza > height - 80 || yGarza < 0) {
       vidas--;
       mostrandoCaida = true;
@@ -230,6 +228,8 @@ function pantallaFin() {
   text("Vidas: 0", width / 2, height / 2 + 40);
   textSize(18);
   text("Presiona 'R' para reiniciar", width / 2, height / 2 + 80);
+
+  if (musicaFondo.isPlaying()) musicaFondo.stop();
 }
 
 // ====== MOSTRAR PUNTAJE ======
@@ -313,7 +313,7 @@ function keyPressed() {
     if (key === " ") {
       estadoJuego = "jugando";
       juegoActivo = true;
-      if (sonidoActivado) musicaFondo.loop();
+      if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
     }
   } else if (estadoJuego === "jugando") {
     if (key === " ") {
@@ -322,7 +322,12 @@ function keyPressed() {
         if (sonidoActivado) reproducirVuelo();
       }
     }
-    if (key === "p" || key === "P") pausa = !pausa;
+    if (key === "p" || key === "P") {
+      pausa = !pausa;
+      if (pausa && musicaFondo.isPlaying()) musicaFondo.pause();
+      else if (!pausa && sonidoActivado && !musicaFondo.isPlaying())
+        musicaFondo.loop();
+    }
   } else if (estadoJuego === "fin") {
     if (key === "r" || key === "R") {
       reiniciarJuego();
@@ -342,7 +347,7 @@ function mousePressed() {
     ) {
       estadoJuego = "jugando";
       juegoActivo = true;
-      if (sonidoActivado) musicaFondo.loop();
+      if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
     } else if (
       mouseX > botonVolX &&
       mouseX < botonVolX + botonVolAncho &&
@@ -350,8 +355,8 @@ function mousePressed() {
       mouseY < botonVolY + botonVolAlto
     ) {
       sonidoActivado = !sonidoActivado;
-      if (sonidoActivado) musicaFondo.loop();
-      else musicaFondo.pause();
+      if (!sonidoActivado && musicaFondo.isPlaying()) musicaFondo.stop();
+      else if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
     }
   }
 }
