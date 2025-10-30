@@ -42,7 +42,7 @@ let sonidoActivado = true;
 let estadoJuego = "inicio"; // "inicio", "jugando", "fin"
 
 // ====== VIDAS ======
-let vidas = 3; //  Número de vidas
+let vidas = 3; // 💖 Número de vidas
 
 // ====== SONIDOS ======
 let sonidoVuelo, sonidoChoque, musicaFondo;
@@ -126,10 +126,12 @@ function pantallaJuego() {
   image(fondo, xFondo1, 0, width, height);
   image(fondo, xFondo2, 0, width, height);
 
+  // Mostrar árboles
   for (let i = 0; i < numArboles; i++) {
     image(arbol, xArbol[i], yArbol[i], 100, alturaArbol[i]);
   }
 
+  // Mostrar garza cayendo
   if (mostrandoCaida) {
     image(garzaCae, xGarza, yGarza, 100, 80);
     yGarza += 8;
@@ -141,20 +143,22 @@ function pantallaJuego() {
     return;
   }
 
+  // ====== PAUSA MEJORADA ======
   if (pausa) {
     image(garza[frameActual], xGarza, yGarza, 100, 80);
     mostrarPuntaje();
-    fill(0, 120);
+    fill(0, 120); // transparencia
     rect(0, 0, width, height);
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(40);
-    text("PAUSA", width / 2, height / 2 - 20);
+    text("⏸ PAUSA", width / 2, height / 2 - 20);
     textSize(20);
     text("Presiona 'P' para continuar", width / 2, height / 2 + 30);
-    return;
+    return; // se detiene TODO el movimiento
   }
 
+  // ====== LÓGICA DE JUEGO ======
   if (juegoActivo) {
     tiempoFrame++;
     if (tiempoFrame > 10) {
@@ -166,15 +170,18 @@ function pantallaJuego() {
     velocidad += gravedad;
     yGarza += velocidad;
 
+    // Movimiento de árboles
     for (let i = 0; i < numArboles; i++) {
       xArbol[i] -= velocidadArbol;
 
+      // Puntaje
       if (!puntoSumado[i] && xGarza > xArbol[i] + 100) {
         puntaje++;
         puntoSumado[i] = true;
         aumentarDificultad();
       }
 
+      // Reposicionar árbol
       if (xArbol[i] < -100) {
         xArbol[i] = width + random(distanciaMinArbol, distanciaMinArbol + 200);
         alturaArbol[i] = random(alturaMin, alturaMax);
@@ -185,6 +192,7 @@ function pantallaJuego() {
 
     mostrarPuntaje();
 
+    // Colisiones
     if (colisiona() || yGarza > height - 80 || yGarza < 0) {
       vidas--;
       mostrandoCaida = true;
@@ -348,6 +356,7 @@ function mousePressed() {
   }
 }
 
+// ====== SONIDOS ======
 function reproducirVuelo() {
   sonidoVuelo.play();
 }
