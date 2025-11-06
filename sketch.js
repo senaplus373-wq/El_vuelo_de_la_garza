@@ -61,22 +61,23 @@ function preload() {
   garza[1] = loadImage("assets/garza2.png");
   garzaCae = loadImage("assets/garzaCae.png");
 
-  // sonidos
-  sonidoVuelo = loadSound("assets/vuelo.mp3");
-  sonidoChoque = loadSound("assets/choque.mp3");
-  musicaFondo = loadSound("assets/fondoMusica.mp3");
+  // sonidos (no obligatorios para que funcione el juego)
+  sonidoVuelo = loadSound("assets/vuelo.mp3", () => {}, () => {});
+  sonidoChoque = loadSound("assets/choque.mp3", () => {}, () => {});
+  musicaFondo = loadSound("assets/fondoMusica.mp3", () => {}, () => {});
 }
 
 // ====== SETUP ======
 function setup() {
-  createCanvas(windowWidth, windowHeight); // se ajusta a toda la pantalla
+  createCanvas(windowWidth, windowHeight);
 
   xFondo1 = 0;
   xFondo2 = width;
 
-  // Configurar música de fondo
-  musicaFondo.setLoop(true);
-  musicaFondo.setVolume(0.5); // volumen medio
+  if (musicaFondo) {
+    musicaFondo.setLoop(true);
+    musicaFondo.setVolume(0.5);
+  }
 
   // Botones
   botonY = height - 100;
@@ -155,9 +156,9 @@ function pantallaJuego() {
     text("PAUSA", width / 2, height / 2 - 20);
     textSize(20);
     text("Presiona 'P' para continuar", width / 2, height / 2 + 30);
-    if (musicaFondo.isPlaying()) musicaFondo.pause();
+    if (musicaFondo && musicaFondo.isPlaying()) musicaFondo.pause();
     return;
-  } else if (!musicaFondo.isPlaying() && sonidoActivado) {
+  } else if (musicaFondo && !musicaFondo.isPlaying() && sonidoActivado) {
     musicaFondo.loop();
   }
 
@@ -197,7 +198,7 @@ function pantallaJuego() {
       tiempoCaida = millis();
       puntajeFinal = puntaje;
       if (puntajeFinal > highScore) highScore = puntajeFinal;
-      if (musicaFondo.isPlaying()) musicaFondo.pause();
+      if (musicaFondo && musicaFondo.isPlaying()) musicaFondo.pause();
       reproducirChoque();
     }
   }
@@ -229,7 +230,7 @@ function pantallaFin() {
   textSize(18);
   text("Presiona 'R' para reiniciar", width / 2, height / 2 + 80);
 
-  if (musicaFondo.isPlaying()) musicaFondo.stop();
+  if (musicaFondo && musicaFondo.isPlaying()) musicaFondo.stop();
 }
 
 // ====== MOSTRAR PUNTAJE ======
@@ -282,7 +283,7 @@ function reiniciarDespuesDeCaer() {
   xFondo1 = 0;
   xFondo2 = width;
   juegoActivo = true;
-  if (sonidoActivado) {
+  if (sonidoActivado && musicaFondo) {
     musicaFondo.stop();
     musicaFondo.loop();
   }
@@ -301,7 +302,7 @@ function reiniciarJuego() {
   reiniciarArboles();
   xFondo1 = 0;
   xFondo2 = width;
-  if (sonidoActivado) {
+  if (sonidoActivado && musicaFondo) {
     musicaFondo.stop();
     musicaFondo.loop();
   }
@@ -313,7 +314,7 @@ function keyPressed() {
     if (key === " ") {
       estadoJuego = "jugando";
       juegoActivo = true;
-      if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
+      if (sonidoActivado && musicaFondo && !musicaFondo.isPlaying()) musicaFondo.loop();
     }
   } else if (estadoJuego === "jugando") {
     if (key === " ") {
@@ -324,8 +325,8 @@ function keyPressed() {
     }
     if (key === "p" || key === "P") {
       pausa = !pausa;
-      if (pausa && musicaFondo.isPlaying()) musicaFondo.pause();
-      else if (!pausa && sonidoActivado && !musicaFondo.isPlaying())
+      if (pausa && musicaFondo && musicaFondo.isPlaying()) musicaFondo.pause();
+      else if (!pausa && sonidoActivado && musicaFondo && !musicaFondo.isPlaying())
         musicaFondo.loop();
     }
   } else if (estadoJuego === "fin") {
@@ -347,7 +348,7 @@ function mousePressed() {
     ) {
       estadoJuego = "jugando";
       juegoActivo = true;
-      if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
+      if (sonidoActivado && musicaFondo && !musicaFondo.isPlaying()) musicaFondo.loop();
     } else if (
       mouseX > botonVolX &&
       mouseX < botonVolX + botonVolAncho &&
@@ -355,17 +356,17 @@ function mousePressed() {
       mouseY < botonVolY + botonVolAlto
     ) {
       sonidoActivado = !sonidoActivado;
-      if (!sonidoActivado && musicaFondo.isPlaying()) musicaFondo.stop();
-      else if (sonidoActivado && !musicaFondo.isPlaying()) musicaFondo.loop();
+      if (!sonidoActivado && musicaFondo && musicaFondo.isPlaying()) musicaFondo.stop();
+      else if (sonidoActivado && musicaFondo && !musicaFondo.isPlaying()) musicaFondo.loop();
     }
   }
 }
 
 // ====== SONIDOS ======
 function reproducirVuelo() {
-  sonidoVuelo.play();
+  if (sonidoVuelo) sonidoVuelo.play();
 }
 
 function reproducirChoque() {
-  sonidoChoque.play();
+  if (sonidoChoque) sonidoChoque.play();
 }
